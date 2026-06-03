@@ -21,39 +21,32 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Setup Android SDK
+      - name: Install Android SDK
         run: |
-          echo "=== Checking existing SDK ==="
-          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
-          echo "ANDROID_HOME=$ANDROID_HOME"
-          ls -la $ANDROID_SDK_ROOT/ || true
-          ls -la $ANDROID_SDK_ROOT/platforms/ || true
-          ls -la $ANDROID_SDK_ROOT/build-tools/ || true
+          set -e
+          export ANDROID_SDK_ROOT=/usr/local/lib/android/sdk
+          export ANDROID_HOME=$ANDROID_SDK_ROOT
+          echo "SDK root: $ANDROID_SDK_ROOT"
           
-          echo "=== Installing SDK components ==="
-          SDKMANAGER=$(find $ANDROID_SDK_ROOT/cmdline-tools -name sdkmanager -type f 2>/dev/null | head -1)
-          echo "sdkmanager: $SDKMANAGER"
-          
-          if [ -n "$SDKMANAGER" ]; then
-            yes | $SDKMANAGER --licenses
-            $SDKMANAGER "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+          # Check if sdkmanager exists
+          if [ -f "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" ]; then
+            SDKMANAGER="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
           else
-            echo "sdkmanager not found, downloading cmdline-tools..."
+            echo "Installing cmdline-tools..."
+            mkdir -p "$ANDROID_SDK_ROOT/cmdline-tools"
             curl -sL https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -o /tmp/cmdline-tools.zip
-            unzip -qo /tmp/cmdline-tools.zip -d /tmp/cmdline-tools-tmp
-            mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
-            mv /tmp/cmdline-tools-tmp/cmdline-tools $ANDROID_SDK_ROOT/cmdline-tools/latest
-            SDKMANAGER=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager
-            yes | $SDKMANAGER --licenses
-            $SDKMANAGER "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+            unzip -qo /tmp/cmdline-tools.zip -d /tmp/cmdline-tools
+            mv /tmp/cmdline-tools/cmdline-tools "$ANDROID_SDK_ROOT/cmdline-tools/latest"
+            SDKMANAGER="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
           fi
           
-          echo "=== Verify installation ==="
-          ls -la $ANDROID_SDK_ROOT/platforms/
-          ls -la $ANDROID_SDK_ROOT/build-tools/
-
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
+          echo "Accepting licenses..."
+          yes | $SDKMANAGER --licenses
+          
+          echo "Installing SDK packages..."
+          $SDKMANAGER "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+          
+          echo "SDK setup complete"
 
       - name: Build Debug APK
         run: ./gradlew assembleDebug
