@@ -45,7 +45,7 @@ class MacroAccessibilityService : AccessibilityService() {
         // 获取屏幕尺寸
         val wm = getSystemService(WINDOW_SERVICE) as WindowManager
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            val bounds = windowManager.currentWindowMetrics.bounds
+            val bounds = wm.currentWindowMetrics.bounds
             displayWidth = bounds.width()
             displayHeight = bounds.height()
         } else {
