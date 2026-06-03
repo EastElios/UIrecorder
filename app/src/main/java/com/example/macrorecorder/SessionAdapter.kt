@@ -9,18 +9,21 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.macrorecorder.data.MacroSession
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.switchmaterial.SwitchMaterial
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
 class SessionAdapter(
     private val onPlayClick: (MacroSession) -> Unit,
-    private val onDeleteClick: (MacroSession) -> Unit
+    private val onDeleteClick: (MacroSession) -> Unit,
+    private val onAutoReplayToggle: (MacroSession, Boolean) -> Unit
 ) : ListAdapter<MacroSession, SessionAdapter.ViewHolder>(DiffCallback()) {
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val tvName: TextView = view.findViewById(R.id.tv_session_name)
         val tvInfo: TextView = view.findViewById(R.id.tv_session_info)
+        val switchAuto: SwitchMaterial = view.findViewById(R.id.switch_session_auto)
         val btnPlay: MaterialButton = view.findViewById(R.id.btn_play)
         val btnDelete: MaterialButton = view.findViewById(R.id.btn_delete)
     }
@@ -37,6 +40,14 @@ class SessionAdapter(
 
         holder.tvName.text = session.name
         holder.tvInfo.text = "${dateFormat.format(Date(session.createdAt))}  ·  ${session.eventCount} 个操作"
+
+        // 设置开关状态，避免重复触发监听
+        holder.switchAuto.setOnCheckedChangeListener(null)
+        holder.switchAuto.isChecked = session.autoReplay
+        holder.switchAuto.setOnCheckedChangeListener { _, isChecked ->
+            onAutoReplayToggle(session, isChecked)
+        }
+
         holder.btnPlay.setOnClickListener { onPlayClick(session) }
         holder.btnDelete.setOnClickListener { onDeleteClick(session) }
     }

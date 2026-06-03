@@ -10,7 +10,8 @@ data class MacroSession(
     val id: Long = System.currentTimeMillis(),
     val name: String = "录制 $id",
     val events: List<MacroEvent> = emptyList(),
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
+    val autoReplay: Boolean = false
 ) {
     val eventCount: Int get() = events.size
 
