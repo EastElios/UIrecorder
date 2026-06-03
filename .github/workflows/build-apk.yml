@@ -23,18 +23,34 @@ jobs:
 
       - name: Setup Android SDK
         run: |
-          SDKMANAGER=$(find ${ANDROID_SDK_ROOT}/cmdline-tools -name sdkmanager 2>/dev/null | head -1)
-          if [ -z "$SDKMANAGER" ]; then
-            echo "Installing cmdline-tools..."
-            mkdir -p ${ANDROID_SDK_ROOT}/cmdline-tools
+          echo "=== Checking existing SDK ==="
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          ls -la $ANDROID_SDK_ROOT/ || true
+          ls -la $ANDROID_SDK_ROOT/platforms/ || true
+          ls -la $ANDROID_SDK_ROOT/build-tools/ || true
+          
+          echo "=== Installing SDK components ==="
+          SDKMANAGER=$(find $ANDROID_SDK_ROOT/cmdline-tools -name sdkmanager -type f 2>/dev/null | head -1)
+          echo "sdkmanager: $SDKMANAGER"
+          
+          if [ -n "$SDKMANAGER" ]; then
+            yes | $SDKMANAGER --licenses
+            $SDKMANAGER "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+          else
+            echo "sdkmanager not found, downloading cmdline-tools..."
             curl -sL https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -o /tmp/cmdline-tools.zip
             unzip -qo /tmp/cmdline-tools.zip -d /tmp/cmdline-tools-tmp
-            mv /tmp/cmdline-tools-tmp/cmdline-tools ${ANDROID_SDK_ROOT}/cmdline-tools/latest
-            SDKMANAGER=${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager
+            mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
+            mv /tmp/cmdline-tools-tmp/cmdline-tools $ANDROID_SDK_ROOT/cmdline-tools/latest
+            SDKMANAGER=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager
+            yes | $SDKMANAGER --licenses
+            $SDKMANAGER "platform-tools" "platforms;android-34" "build-tools;34.0.0"
           fi
-          echo "Using sdkmanager: $SDKMANAGER"
-          yes | $SDKMANAGER --licenses > /dev/null 2>&1 || true
-          $SDKMANAGER "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+          
+          echo "=== Verify installation ==="
+          ls -la $ANDROID_SDK_ROOT/platforms/
+          ls -la $ANDROID_SDK_ROOT/build-tools/
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
