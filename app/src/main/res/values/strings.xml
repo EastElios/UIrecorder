@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">宏录制</string>
+    <string name="accessibility_service_description">宏录制回放需要无障碍服务权限来录制和回放您的操作。该服务仅用于录制屏幕操作并在需要时自动回放，不会收集或传输任何个人数据。</string>
+</resources>
